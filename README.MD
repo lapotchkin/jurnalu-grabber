@@ -1,11 +1,12 @@
 # How to use
 
-1. Clone this repository
-2. Install libraries via composer
+1. Clone this repository.
+1. Install Composer: https://getcomposer.org/doc/00-intro.md
+1. Install libraries via Composer.
     ```bash
-    composer install
+    php composer.phar install
     ```
-3. Grab issue.
+1. Grab issue.
     ```bash
      php grab.php -u http://jurnalu.ru/online-reading/comicsonline/ion2006/ion2006001
     ```

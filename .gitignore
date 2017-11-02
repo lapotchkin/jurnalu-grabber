@@ -6,5 +6,6 @@
 .idea
 vendor
 issues
+composer.phar
 out
 gen
