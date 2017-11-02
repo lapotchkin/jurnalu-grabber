@@ -1,0 +1,7 @@
+{
+  "require": {
+    "guzzlehttp/guzzle": "~6.0",
+    "paquettg/php-html-parser": "1.7.0",
+    "ulrichsg/getopt-php": "^3.0"
+  }
+}
