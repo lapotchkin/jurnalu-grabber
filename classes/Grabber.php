@@ -28,6 +28,7 @@ class Grabber {
     private $_sNextIssueUrl = NULL;
     private $_nDownloadedIssues = 0;
     private $_nIssuesNumber = NULL;
+    private $_sSite = 'jurnalu';
 
     public function __construct() {
 
@@ -75,10 +76,26 @@ class Grabber {
             $this->_sTitle = self::_sanitizeFileName(trim($aTitle[0]), 'Unix');
         }
 
-        $oNextPicUrl = $oDom->find('div.ForRead a');
-        $sNextPicUrl = $oNextPicUrl[1]->getAttributes()['href'];
-        $oPage = $oNextPicUrl[1]->find('img');
-        $sPageUrl = $oPage[0]->getAttributes()['src'];
+        switch ($this->_sSite) {
+            case 'бомж':
+                $oNextPicUrl = $oDom->find('a');
+                $sNextPicUrl =
+                    (
+                        $oNextPicUrl[0]->getAttributes()['href'] === $oNextPicUrl[1]->getAttributes()['href']
+                        && $this->_nFileNameIterator !== 1
+                    )
+                    || $oNextPicUrl[1]->innerHtml() === ''
+                    ? NULL
+                    : str_replace(basename($sUrl), '', $sUrl) . $oNextPicUrl[1]->getAttributes()['href'];
+                $oPage = $oDom->find('img');
+                $sPageUrl = str_replace(basename($sUrl), '', $sUrl) . $oPage[0]->getAttributes()['src'];
+                break;
+            default:
+                $oNextPicUrl = $oDom->find('div.ForRead a');
+                $sNextPicUrl = $oNextPicUrl[1]->getAttributes()['href'];
+                $oPage = $oNextPicUrl[1]->find('img');
+                $sPageUrl = $oPage[0]->getAttributes()['src'];
+        }
 
         $headers = ['Referer' => $sUrl];
         $oGuzzleClient = new Client();
@@ -107,10 +124,18 @@ class Grabber {
             "Page: " . (basename($sUrl) === $this->_sIssue ? 1 : (int)basename($sUrl)) . ", " . 'URL = ' . $sPageUrl
         );
 
-        if (strstr($sNextPicUrl, $this->_sIssue)) {
-            $this->_saveImage($this->_sDomain . $sNextPicUrl);
-        } else {
-            $this->_sNextIssueUrl = !$sNextPicUrl ? NULL : $this->_sDomain . $sNextPicUrl;
+        switch ($this->_sSite) {
+            case 'бомж':
+                if (!is_null($sNextPicUrl)) {
+                    $this->_saveImage($sNextPicUrl);
+                }
+                break;
+            default:
+                if (strstr($sNextPicUrl, $this->_sIssue)) {
+                    $this->_saveImage($this->_sDomain . $sNextPicUrl);
+                } else {
+                    $this->_sNextIssueUrl = !$sNextPicUrl ? NULL : $this->_sDomain . $sNextPicUrl;
+                }
         }
     }
 
@@ -192,6 +217,10 @@ class Grabber {
 
             if (is_null($sUrl)) {
                 throw new \Exception("Option 'url' must have a value");
+            }
+
+            if (strstr($sUrl, 'ruscomarchiv')) {
+                $this->_sSite = 'бомж';
             }
 
             $this->_zipIssue($sUrl);
